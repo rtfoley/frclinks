@@ -91,6 +91,13 @@ for i in xrange(0, (len(eventList) + 2) / 3):
     row.append(eventList[k]['name'])
   events.append(row)
 
+
+# JSON file extracted from https://github.com/substack/provinces/blob/master/provinces.json
+areaList = json.load(open("areas.json"))
+areas = {}
+for area in areaList:
+    areas[area["code"].encode('utf-8')] = area["country"].encode('utf-8')
+
 def GetYear(handler):
   endNumber = yearRe.findall(handler.request.path)
   if len(endNumber) > 0:
@@ -181,10 +188,17 @@ class AreaTeamListPage(webapp.RequestHandler):
   """
   def get(self):
     area = areaRe.findall(self.request.path)[-1]
-    Redir(self, 'https://my.firstinspires.org/myarea/index.lasso?page=searchresults' +
-                  '&programs=FRC&reports=teams&sort_teams=number&results_size' +
-                  '=250&omit_searchform=1&season_FRC=' + GetYear(self) +
-                  '&area=' + area)
+
+    # if the area part of the URL starts with a state/ province code, use the internal dict
+    if area[0:2] in areas:
+        Redir(self, 'https://www.firstinspires.org/team-event-search#type=teams' +
+                    '&sort=number&programs=FRC&year=' + GetYear(self) +
+                    '&country=' + areas[area[0:2]] +
+                    '&stateprov=' + area[0:2])
+    else:
+        Redir(self, 'https://www.firstinspires.org/team-event-search#type=teams' +
+                    '&sort=number&programs=FRC&year=' + GetYear(self) +
+                    '&country=' + area)
 
 class TeamWebsitePage(webapp.RequestHandler):
   """
