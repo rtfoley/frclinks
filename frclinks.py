@@ -189,8 +189,9 @@ class AreaTeamListPage(webapp.RequestHandler):
   def get(self):
     area = areaRe.findall(self.request.path)[-1]
 
-    # if the area part of the URL starts with a state/ province code, use the internal dict
-    if area[0:2] in areas:
+    # Look for valid state/ province codes ("TX" or "TX-USA")
+    area_is_code = len(area) == 2 or (len(area) > 2 and area[2] == '-')
+    if area_is_code and area[0:2].upper() in areas:
         Redir(self, 'https://www.firstinspires.org/team-event-search#type=teams' +
                     '&sort=number&programs=FRC&year=' + GetYear(self) +
                     '&country=' + areas[area[0:2]] +
